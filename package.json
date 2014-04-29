@@ -1,0 +1,21 @@
+{
+  "name": "decorator",
+  "version": "0.0.0",
+  "description": "Decorate models for presentation",
+  "repository": "https://bitbucket.org/pearlshare/ps-decorator",
+  "main": "index.js",
+  "scripts": {
+    "test": "mocha --compilers coffee:coffee-script/register --colors --recursive"
+  },
+  "keywords": [
+    "mongoose",
+    "decorator"
+  ],
+  "author": "Oliver Brooks",
+  "license": "MIT",
+  "dependencies": {
+    "coffee-script": "1.7.x",
+    "q": "^1.0.1",
+    "mongoose": "^3.8.8"
+  }
+}
