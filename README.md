@@ -25,6 +25,14 @@ When run the decorator recursively changes:
     decorator.then (decorated) ->
       console.log(decorated) #=> {uid: "5332a1499c8fd2412ba94c90", name: "Fish", createdAt: 12938712398987}
 
+
+    decorator = new Decorator(user, restrictedKeys: ['createdAt'])
+
+    decorator.decorate()
+
+    decorator.then (decorated) ->
+      console.log(decorated) #=> {uid: "5332a1499c8fd2412ba94c90", name: "Fish"}
+
 ```
 
 ## Extending

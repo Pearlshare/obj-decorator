@@ -1,19 +1,17 @@
 Q = require("q")
-mongoose = require("mongoose")
 
 class Decorator
 
-  constructor: (model) ->
+  constructor: (model, options = {}) ->
     @deferred = Q.defer()
     @promise = @deferred.promise
     @model = model
+    @restrictedKeys = options.restrictedKeys || []
+    @idKey = options.idKey || 'uid'
 
 
   decorate: ->
     @deferred.resolve @pearlsharify(@model)
-
-
-  restrictedKeys: []
 
 
   pearlsharify: (out) ->
@@ -46,7 +44,7 @@ class Decorator
 
         # Turn all ids into uid for the ios client
         if key in ['_id', 'id']
-          out['uid'] = out['_id'] || out['id']
+          out[@idKey] = out['_id'] || out['id']
           delete out._id
           delete out.id
 
