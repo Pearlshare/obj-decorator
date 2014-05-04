@@ -2,16 +2,34 @@ Q = require("q")
 
 class Decorator
 
-  constructor: (model, options = {}) ->
+
+  ###
+    new - create a new decorator instance
+    @param {Object} source - source object to decorate
+    @param {Object} options
+      @option {Array} restrictedKeys - keys to remove from the output document
+      @option {String} idKey - turn any _id or id keys into this key (defaults to 'uid')
+  ###
+  constructor: (source, options = {}) ->
     @deferred = Q.defer()
     @promise = @deferred.promise
-    @model = model
+    @source = source
     @restrictedKeys = options.restrictedKeys || []
     @idKey = options.idKey || 'uid'
 
 
-  decorate: ->
-    @deferred.resolve @pearlsharify(@model)
+  ###
+    decorate - decorates the provided object
+    @param {Function} callback with node signature
+    @returns {Promise}
+  ###
+  decorate: (callback) ->
+    try
+      @deferred.resolve @pearlsharify(@source)
+    catch err
+      @deferred.catch err
+    
+    @promise.nodeify(callback)
 
 
   pearlsharify: (out) ->
