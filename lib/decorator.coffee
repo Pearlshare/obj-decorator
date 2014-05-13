@@ -2,6 +2,9 @@ Q = require("q")
 
 class Decorator
 
+  # A dictionary of keys to remove from the output and what to replace them with
+  @translations = {}
+  @restrictedKeys = []
 
   ###
     new - create a new decorator instance
@@ -15,7 +18,7 @@ class Decorator
     @promise = @deferred.promise
     @source = source
     @restrictedKeys = options.restrictedKeys || []
-    @idKey = options.idKey || 'uid'
+    @translations = options.translations || {}
 
 
   ###
@@ -48,6 +51,10 @@ class Decorator
         for restrictedKey in @restrictedKeys
           delete out[restrictedKey]
 
+        # Remove global restricted keys
+        for restrictedKey in @constructor.restrictedKeys
+          delete out[restrictedKey]
+
         # Pearlsharify arrays of items
         if Object.prototype.toString.call( value ) == '[object Array]' and value.length > 0
           out[key] = @_pearlsharifyArray(value)
@@ -60,11 +67,17 @@ class Decorator
         if value instanceof Date
           out[key] = value.getTime()
 
-        # Turn all ids into uid for the ios client
-        if key in ['_id', 'id']
-          out[@idKey] = out['_id'] || out['id']
-          delete out._id
-          delete out.id
+        # remame bad keys to the good keys from global translations
+        for badKey, goodKey of @constructor.translations
+          if key == badKey
+            out[goodKey] = out[key]
+            delete out[key]
+
+        # remame bad keys to the good keys from translations
+        for badKey, goodKey of @translations
+          if key == badKey
+            out[goodKey] = out[key]
+            delete out[key]
 
     delete out.__v
 

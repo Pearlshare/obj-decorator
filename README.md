@@ -14,9 +14,13 @@ When run the decorator recursively changes:
 ```coffee
     Decorator = require("decorator")
 
+    Decorator.restrictedKeys = ["__V"] # These get removed
+
+    Decorator.translations = {_id: "uid"} # _id keys get replaced with uid
+
     user = new User(name: 'Fish', createdAt: new Date())
 
-    console.log(user) #=> {_uid: "5332a1499c8fd2412ba94c90", name: "Fish", createdAt: "Tue Apr 29 2014 16:52:39 GMT+0000 (UTC)"}
+    console.log(user) #=> {_id: "5332a1499c8fd2412ba94c90", name: "Fish", createdAt: "Tue Apr 29 2014 16:52:39 GMT+0000 (UTC)", __v: 3}
 
     decorator = new Decorator(user)
 
@@ -24,10 +28,10 @@ When run the decorator recursively changes:
       console.log(decorated) #=> {uid: "5332a1499c8fd2412ba94c90", name: "Fish", createdAt: 12938712398987}
 
 
-    decorator = new Decorator(user, restrictedKeys: ['createdAt'])
+    decorator = new Decorator(user, restrictedKeys: ['createdAt'], translations: {name: "shortName"})
 
     decorator.decorate (err, decorated) ->
-      console.log(decorated) #=> {uid: "5332a1499c8fd2412ba94c90", name: "Fish"}
+      console.log(decorated) #=> {uid: "5332a1499c8fd2412ba94c90", shortName: "Fish"}
 
 ```
 
