@@ -30,7 +30,7 @@ class Decorator
     try
       @deferred.resolve @pearlsharify(@source)
     catch err
-      @deferred.catch err
+      @deferred.reject err
     
     @promise.nodeify(callback)
 
