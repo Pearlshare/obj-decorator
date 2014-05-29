@@ -26,7 +26,7 @@ class Decorator
     @param {Function} callback with node signature
     @returns {Promise}
   ###
-  decorate: (callback) ->
+  decorate: (callback) =>
     try
       @deferred.resolve @pearlsharify(@source)
     catch err
@@ -35,7 +35,7 @@ class Decorator
     @promise.nodeify(callback)
 
 
-  pearlsharify: (out) ->
+  pearlsharify: (out) =>
     # All hell breaks loose if looking up keys for the mongodb bson type
     return out if out._bsontype
 
