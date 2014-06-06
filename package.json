@@ -1,5 +1,5 @@
 {
-  "name": "decorator",
+  "name": "ps-decorator",
   "version": "0.0.5",
   "description": "Decorate models for presentation",
   "repository": "https://bitbucket.org/pearlshare/ps-decorator",
