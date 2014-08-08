@@ -37,7 +37,7 @@ class Decorator
 
   pearlsharify: (out) =>
     # All hell breaks loose if looking up keys for the mongodb bson type
-    return out if out._bsontype
+    return out if out == undefined || out._bsontype
 
     # If the object has a toObject method then call it so we have simple objects to manipulate
     if typeof out.toObject == 'function'
