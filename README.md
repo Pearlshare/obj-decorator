@@ -12,7 +12,7 @@ When run the decorator recursively changes:
 ## Usage
 
 ```coffee
-    Decorator = require("decorator")
+    Decorator = require("ps-decorator")
 
     Decorator.restrictedKeys = ["__V"] # These get removed
 
@@ -40,7 +40,7 @@ When run the decorator recursively changes:
 The decorator class can be extended and the decorate method overridden.
 
 ```coffee
-    Decorator = require("decorator")
+    Decorator = require("ps-decorator")
 
     class UserDecorator extends Decorator
 

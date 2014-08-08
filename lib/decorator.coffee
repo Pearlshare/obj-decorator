@@ -47,6 +47,8 @@ class Decorator
 
       if value
 
+        valueType = Object.prototype.toString.call(value)
+
         # Remove restricted keys
         for restrictedKey in @restrictedKeys
           delete out[restrictedKey]
@@ -55,8 +57,11 @@ class Decorator
         for restrictedKey in @constructor.restrictedKeys
           delete out[restrictedKey]
 
+        if valueType == '[object Object]' and Object.keys(value) and Object.keys(value).length == 0
+          out[key] = null
+
         # Pearlsharify arrays of items
-        if Object.prototype.toString.call( value ) == '[object Array]' and value.length > 0
+        if valueType == '[object Array]' and value.length > 0
           out[key] = @_pearlsharifyArray(value)
 
         # If the value has an id key then pearlsharify the value as it's an object
