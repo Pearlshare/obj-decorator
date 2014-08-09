@@ -9,6 +9,7 @@ class Decorator
   # A dictionary of keys and a function to perform on the corresponding values
   @valueTransforms = {}
 
+
   ###
     new - create a new decorator instance
     @param {Object} options
@@ -18,7 +19,7 @@ class Decorator
   ###
   constructor: (options = {}) ->
     restrictedKeys = options.restrictedKeys || []
-    @restrictedKeys = restrictedKeys.concat(@constructor.restrictedKeys)
+    @restrictedKeys = _.uniq restrictedKeys.concat(@constructor.restrictedKeys)
 
     translations = options.translations || {}
     @translations = _.merge @constructor.translations, translations
@@ -50,7 +51,9 @@ class Decorator
         out = @_decorateObject(out)
       when '[object Function]'
         out = undefined
+
     out
+
 
   ###
     Decorate an object
@@ -58,32 +61,32 @@ class Decorator
   ###
   _decorateObject: (out) ->
     # if bson objects go weird
-    return if out._bsontype
+    return out.toString() if out._bsontype
 
     # If the object has a toObject method then call it so we have simple objects to manipulate
     out = out.toObject() if typeof out.toObject == 'function'
 
-    # Process through the object
+    # Apply value transformations such as 
+    for transformKey, valueTransform of @valueTransforms
+      if out[transformKey]
+        try
+          out[transformKey] = valueTransform(out[transformKey])
+        catch
+          console.error "value transform of key:#{key}, value:#{value} failed"
+
+    # remame keys to the new key names from translations
+    for badKey, goodKey of @translations
+      if out[badKey]
+        out[goodKey] = out[badKey]
+        delete out[badKey]
+
+    # Remove restricted keys
+    delete out[restrictedKey] for restrictedKey in @restrictedKeys
+
+    # Process through the object values
     for key, value of out
 
       continue unless value
-
-      # Remove restricted keys
-      delete out[restrictedKey] for restrictedKey in @restrictedKeys
-
-      # Apply value transformations such as 
-      for transformKey, valueTransform of @valueTransforms
-        if key == transformKey
-          try
-            out[key] = valueTransform(value)
-          catch
-            console.error "value transform of key:#{key}, value:#{value} failed"
-
-      # remame keys to the new key names from translations
-      for badKey, goodKey of @translations
-        if key == badKey
-          out[goodKey] = out[key]
-          delete out[key]
 
       # Process values
       switch Object.prototype.toString.call(value)
