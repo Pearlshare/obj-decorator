@@ -29,7 +29,7 @@ class Decorator
 
   decorate: (out) ->
     # if undefined return
-    return out if out == undefined
+    return out if out == undefined || out._bsontype
 
     out = _.clone(out)
 
