@@ -27,73 +27,82 @@ class Decorator
     @valueTransforms = _.merge @constructor.valueTransforms, valueTransforms
 
 
+  ###
+    decorate
+    @param {Object} out - object/array/string/something else to process
+  ###
   decorate: (out) ->
     copy = _.clone(out)
-    @_decorateObject(copy)
+    @_decorateIt(copy)
 
 
+  ###
+    _decorateIt
+    @param {Object} out - thing to convert
+  ###
+  _decorateIt: (out) ->
+
+    switch Object.prototype.toString.call(out)
+      when '[object Array]'
+        out = out.map (item) => @_decorateIt(item)
+        out = _.compact(out)
+      when '[object Object]'
+        out = @_decorateObject(out)
+      when '[object Function]'
+        out = undefined
+    out
+
+  ###
+    Decorate an object
+    @param {Object} out
+  ###
   _decorateObject: (out) ->
-    # if undefined return
-    return out if out == undefined || out._bsontype
+    # if bson objects go weird
+    return if out._bsontype
 
     # If the object has a toObject method then call it so we have simple objects to manipulate
-    if typeof out.toObject == 'function'
-      out = out.toObject()
+    out = out.toObject() if typeof out.toObject == 'function'
 
+    # Process through the object
     for key, value of out
 
-      if value
+      continue unless value
 
-        valueType = Object.prototype.toString.call(value)
+      # Remove restricted keys
+      delete out[restrictedKey] for restrictedKey in @restrictedKeys
 
-        # Remove restricted keys
-        for restrictedKey in @restrictedKeys
-          delete out[restrictedKey]
+      # Apply value transformations such as 
+      for transformKey, valueTransform of @valueTransforms
+        if key == transformKey
+          try
+            out[key] = valueTransform(value)
+          catch
+            console.error "value transform of key:#{key}, value:#{value} failed"
 
-        # Apply value transformations such as 
-        for transformKey, valueTransform of @valueTransforms
-          if key == transformKey
-            try
-              out[key] = valueTransform(value)
-            catch
-              console.error "value transform of key:#{key}, value:#{value} failed"
-
-        # Don't output functions
-        if valueType == '[object Function]'
+      # remame keys to the new key names from translations
+      for badKey, goodKey of @translations
+        if key == badKey
+          out[goodKey] = out[key]
           delete out[key]
 
+      # Process values
+      switch Object.prototype.toString.call(value)
+        # Don't output functions
+        when '[object Function]'
+          delete out[key]
         # Process objects
-        if valueType == '[object Object]' 
+        when '[object Object]'
           # Output empty objects as null
           if Object.keys(value) and Object.keys(value).length == 0
             out[key] = null
           # continue processing sub objects
           else
-            out[key] = @_decorateObject value
-
-        # Pearlsharify arrays of items
-        if valueType == '[object Array]' and value.length > 0
-          out[key] = @_decorateArray(value)
-
-        # remame keys to the new key names from translations
-        for badKey, goodKey of @translations
-          if key == badKey
-            out[goodKey] = out[key]
-            delete out[key]
+            out[key] = @_decorateIt value
+        # Decorate arrays of items
+        when '[object Array]'
+          out[key] = @_decorateIt(value)
 
     out
-
-
-  _decorateArray: (array) ->
-    newArray = []
-
-    for item in array
-      if Object.prototype.toString.call( item ) == '[object String]'
-        newArray.push item
-      else if Object.prototype.toString.call( item ) == '[object Object]' and not item.__parentArray
-        newArray.push @_decorateObject(item)
-
-    newArray
 
 
 module.exports = Decorator

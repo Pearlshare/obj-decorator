@@ -19,6 +19,12 @@ testData =
       value: 'myEmailAddress'
     }
   ]
+  otherArray: [
+    'fish'
+    1
+    pig = () -> 'function output'
+    {object: 'pig'}
+  ]
 
 
 describe 'Decorator', ->
@@ -103,4 +109,25 @@ describe 'Decorator', ->
       it 'should not change other values', (done) ->
         expect(out.name).to.equal(testData.name)
         done()
+
+    context 'nested arrays', ->
+
+      decorator = new Decorator(restrictedKeys: ['type'])
+
+      it 'should remove type from the nested objects', (done) ->
+        out = decorator.decorate(testData)
+        expect(out.contactDetails[0]).to.not.have.key('type')
+        done()
+
+      it 'should remove functions', (done) ->
+        out = decorator.decorate(testData)
+        expect(out.otherArray).to.have.length(3)
+        done()
+
+      it 'should remove functions', (done) ->
+        out = decorator.decorate(testData)
+        console.log "out", out
+        expect(out.otherArray).to.have.length(3)
+        done()
+
 
