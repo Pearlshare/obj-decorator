@@ -1,43 +1,36 @@
-Q = require("q")
+_ = require 'lodash'
 
 class Decorator
 
-  # A dictionary of keys to remove from the output and what to replace them with
-  @translations = {}
+  # An array of keys to remove from the output
   @restrictedKeys = []
+  # A dictionary of keys and what to rename them
+  @translations = {}
+  # A dictionary of keys and a function to perform on the corresponding values
+  @valueTransforms = {}
 
   ###
     new - create a new decorator instance
-    @param {Object} source - source object to decorate
     @param {Object} options
       @option {Array} restrictedKeys - keys to remove from the output document
-      @option {String} idKey - turn any _id or id keys into this key (defaults to 'uid')
+      @option {Object} translations - key/value of object keys to rename from/to
+      @option {Object} valueTransforms - key/function of value types to tranform and their function
   ###
-  constructor: (source, options = {}) ->
-    @deferred = Q.defer()
-    @promise = @deferred.promise
-    @source = source
-    @restrictedKeys = options.restrictedKeys || []
-    @translations = options.translations || {}
+  constructor: (options = {}) ->
+    restrictedKeys = options.restrictedKeys || []
+    @restrictedKeys = restrictedKeys.concat(@constructor.restrictedKeys)
+
+    translations = options.translations || {}
+    @translations = _.merge @constructor.translations, translations
+
+    valueTransforms = options.valueTransforms || {}
+    @valueTransforms = _.merge @constructor.valueTransforms, valueTransforms
 
 
-  ###
-    decorate - decorates the provided object
-    @param {Function} callback with node signature
-    @returns {Promise}
-  ###
-  decorate: (callback) =>
-    try
-      @deferred.resolve @pearlsharify(@source)
-    catch err
-      @deferred.reject err
-    
-    @promise.nodeify(callback)
-
-
-  pearlsharify: (out) =>
+  decorate: (out) ->
     # All hell breaks loose if looking up keys for the mongodb bson type
     return out if out == undefined || out._bsontype
+    out = _.cloneDeep(out)
 
     # If the object has a toObject method then call it so we have simple objects to manipulate
     if typeof out.toObject == 'function'
@@ -53,50 +46,48 @@ class Decorator
         for restrictedKey in @restrictedKeys
           delete out[restrictedKey]
 
-        # Remove global restricted keys
-        for restrictedKey in @constructor.restrictedKeys
-          delete out[restrictedKey]
+        # Don't output functions
+        if valueType == '[object Function]'
+          delete out[key]
 
-        if valueType == '[object Object]' and Object.keys(value) and Object.keys(value).length == 0
-          out[key] = null
+        # Process objects
+        if valueType == '[object Object]' 
+          # Output empty objects as null
+          if Object.keys(value) and Object.keys(value).length == 0
+            out[key] = null
+          # continue processing sub objects
+          else
+            out[key] = @decorate value
 
         # Pearlsharify arrays of items
         if valueType == '[object Array]' and value.length > 0
-          out[key] = @_pearlsharifyArray(value)
+          out[key] = @_decorateArray(value)
 
-        # If the value has an id key then pearlsharify the value as it's an object
-        else if (value.id || value.hasOwnProperty('_id'))
-          out[key] = @pearlsharify value
+        # Apply value transformations such as 
+        for transformKey, valueTransform of @valueTransforms
+          if key == transformKey
+            try
+              out[key] = valueTransform(value)
+            catch
+              console.error "value transform of key:#{key}, value:#{value} failed"
 
-        # Output dates as milliseconds since epoch
-        if value instanceof Date
-          out[key] = value.getTime()
-
-        # remame bad keys to the good keys from global translations
-        for badKey, goodKey of @constructor.translations
-          if key == badKey
-            out[goodKey] = out[key]
-            delete out[key]
-
-        # remame bad keys to the good keys from translations
+        # remame keys to the new key names from translations
         for badKey, goodKey of @translations
           if key == badKey
             out[goodKey] = out[key]
             delete out[key]
 
-    delete out.__v
-
     out
 
 
-  _pearlsharifyArray: (array) ->
+  _decorateArray: (array) ->
     newArray = []
 
     for item in array
       if Object.prototype.toString.call( item ) == '[object String]'
         newArray.push item
       else if Object.prototype.toString.call( item ) == '[object Object]' and not item.__parentArray
-        newArray.push @pearlsharify(item)
+        newArray.push @decorate(item)
 
     newArray
 

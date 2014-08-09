@@ -1,7 +1,7 @@
 {
   "name": "ps-decorator",
-  "version": "0.0.7",
-  "description": "Decorate models for presentation",
+  "version": "0.1.0",
+  "description": "Decorate objects for presentation",
   "repository": "https://bitbucket.org/pearlshare/ps-decorator",
   "main": "index.js",
   "scripts": {
@@ -15,7 +15,10 @@
   "license": "MIT",
   "dependencies": {
     "coffee-script": "1.7.x",
-    "q": "^1.0.1",
-    "mongoose": "^3.8.8"
+    "lodash": "^2.4.1"
+  },
+  "devDependencies": {
+    "chai": "^1.9.1",
+    "mocha": "^1.21.4"
   }
 }
