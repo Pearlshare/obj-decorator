@@ -28,10 +28,13 @@ class Decorator
 
 
   decorate: (out) ->
+    copy = _.clone(out)
+    @_decorateObject(copy)
+
+
+  _decorateObject: (out) ->
     # if undefined return
     return out if out == undefined || out._bsontype
-
-    out = _.clone(out)
 
     # If the object has a toObject method then call it so we have simple objects to manipulate
     if typeof out.toObject == 'function'
@@ -47,6 +50,14 @@ class Decorator
         for restrictedKey in @restrictedKeys
           delete out[restrictedKey]
 
+        # Apply value transformations such as 
+        for transformKey, valueTransform of @valueTransforms
+          if key == transformKey
+            try
+              out[key] = valueTransform(value)
+            catch
+              console.error "value transform of key:#{key}, value:#{value} failed"
+
         # Don't output functions
         if valueType == '[object Function]'
           delete out[key]
@@ -58,19 +69,11 @@ class Decorator
             out[key] = null
           # continue processing sub objects
           else
-            out[key] = @decorate value
+            out[key] = @_decorateObject value
 
         # Pearlsharify arrays of items
         if valueType == '[object Array]' and value.length > 0
           out[key] = @_decorateArray(value)
-
-        # Apply value transformations such as 
-        for transformKey, valueTransform of @valueTransforms
-          if key == transformKey
-            try
-              out[key] = valueTransform(value)
-            catch
-              console.error "value transform of key:#{key}, value:#{value} failed"
 
         # remame keys to the new key names from translations
         for badKey, goodKey of @translations
@@ -88,7 +91,7 @@ class Decorator
       if Object.prototype.toString.call( item ) == '[object String]'
         newArray.push item
       else if Object.prototype.toString.call( item ) == '[object Object]' and not item.__parentArray
-        newArray.push @decorate(item)
+        newArray.push @_decorateObject(item)
 
     newArray
 
