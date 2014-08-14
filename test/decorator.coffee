@@ -1,9 +1,10 @@
-chai = require("chai")
+_ = require('lodash')
+chai = require('chai')
 expect = chai.expect
 
 Decorator = require('../index')
 
-testData = 
+origData = 
   name: 'Oliver Brooks'
   dontShow: 'superSecret'
   sillyNameForDescription: 'Writing coffeescript at the moment!'
@@ -26,6 +27,7 @@ testData =
     {object: 'pig'}
   ]
 
+out = null
 
 describe 'Decorator', ->
 
@@ -53,6 +55,12 @@ describe 'Decorator', ->
       done()
 
   describe 'decorate', ->
+    testData = null
+
+    beforeEach (done) ->
+      testData = _.clone(origData)
+      done()
+
 
     context 'Default decorator', ->
 
@@ -70,49 +78,65 @@ describe 'Decorator', ->
 
     context 'With restricted Keys', ->
 
-      decorator = new Decorator(restrictedKeys: ['dontShow'])
-      out = decorator.decorate(testData)
+      out = null
+
+      before (done) ->
+        decorator = new Decorator(restrictedKeys: ['dontShow'])
+        out = decorator.decorate(testData)
+        done()
 
       it 'should not contain the dontshow key', (done) ->
         expect(out.dontShow).to.equal(undefined)
         done()
 
       it 'should not remove any other keys', (done) ->
-        expect(out.name).to.equal(testData.name)
+        expect(out.name).to.equal(origData.name)
         done()
 
     context 'With Translations', ->
 
-      decorator = new Decorator(translations: {sillyNameForDescription: 'description'})
-      out = decorator.decorate(testData)
+      out = null
+
+      before (done) ->
+        decorator = new Decorator(translations: {sillyNameForDescription: 'description'})
+        out = decorator.decorate(testData)
+        done()
 
       it 'should not contain the dontshow key', (done) ->
-        expect(out.description).to.equal(testData.sillyNameForDescription)
+        expect(out.description).to.equal(origData.sillyNameForDescription)
         done()
 
       it 'should not change other keys', (done) ->
-        expect(out.name).to.equal(testData.name)
+        expect(out.name).to.equal(origData.name)
         done()
 
     context 'With value transforms', (done) ->
 
-      decorator = new Decorator
-        valueTransforms:
-          createdAt: (v) -> v.getTime()
+      out = null
 
-      out = decorator.decorate(testData)
+      before (done) ->
+        decorator = new Decorator
+          valueTransforms:
+            createdAt: (v) -> v.getTime()
+
+        out = decorator.decorate(testData)
+        done()
 
       it 'should tranform the created at date to a time stamp', (done) ->
-        expect(out.createdAt).to.equal(testData.createdAt.getTime())
+        expect(out.createdAt).to.equal(origData.createdAt.getTime())
         done()
 
       it 'should not change other values', (done) ->
-        expect(out.name).to.equal(testData.name)
+        expect(out.name).to.equal(origData.name)
         done()
 
     context 'nested arrays', ->
 
-      decorator = new Decorator(restrictedKeys: ['type'])
+      decorator = null
+
+      before (done) ->
+        decorator = new Decorator(restrictedKeys: ['type'])
+        done()
 
       it 'should remove type from the nested objects', (done) ->
         out = decorator.decorate(testData)
@@ -126,7 +150,6 @@ describe 'Decorator', ->
 
       it 'should remove functions', (done) ->
         out = decorator.decorate(testData)
-        console.log "out", out
         expect(out.otherArray).to.have.length(3)
         done()
 

@@ -33,8 +33,7 @@ class Decorator
     @param {Object} out - object/array/string/something else to process
   ###
   decorate: (out) ->
-    copy = _.clone(out)
-    @_decorateIt(copy)
+    @_decorateIt(out)
 
 
   ###
@@ -43,15 +42,16 @@ class Decorator
   ###
   _decorateIt: (out) ->
 
+    self = this
+
     switch Object.prototype.toString.call(out)
       when '[object Array]'
-        out = out.map (item) => @_decorateIt(item)
+        out = out.map (item) -> self._decorateIt(item)
         out = _.compact(out)
       when '[object Object]'
-        out = @_decorateObject(out)
+        out = self._decorateObject(out)
       when '[object Function]'
         out = undefined
-
     out
 
 
@@ -60,37 +60,20 @@ class Decorator
     @param {Object} out
   ###
   _decorateObject: (out) ->
-    # if bson objects go weird
-    return out.toString() if out._bsontype
 
     # If the object has a toObject method then call it so we have simple objects to manipulate
     out = out.toObject() if typeof out.toObject == 'function'
 
-    # Apply value transformations such as 
-    for transformKey, valueTransform of @valueTransforms
-      if out[transformKey]
-        try
-          out[transformKey] = valueTransform(out[transformKey])
-        catch
-          console.error "value transform of key:#{key}, value:#{value} failed"
-
-    # remame keys to the new key names from translations
-    for badKey, goodKey of @translations
-      if out[badKey]
-        out[goodKey] = out[badKey]
-        delete out[badKey]
-
-    # Remove restricted keys
-    delete out[restrictedKey] for restrictedKey in @restrictedKeys
-
     # Process through the object values
     for key, value of out
+      # if bson objects go weird
+      return out.toString() if out._bsontype
 
       continue unless value
 
       # Process values
       switch Object.prototype.toString.call(value)
-        # Don't output functions
+        # # Don't output functions
         when '[object Function]'
           delete out[key]
         # Process objects
@@ -104,6 +87,25 @@ class Decorator
         # Decorate arrays of items
         when '[object Array]'
           out[key] = @_decorateIt(value)
+        else
+          out[key] = @_decorateIt(value)
+
+    # Apply value transformations such as 
+    for transformKey, valueTransform of @valueTransforms
+      if out[transformKey]
+        try
+          out[transformKey] = valueTransform(out[transformKey])
+        catch
+          console.error "value transform of key:#{transformKey}, value:#{out[transformKey]} failed"
+
+    # remame keys to the new key names from translations
+    for badKey, goodKey of @translations
+      if out[badKey]
+        out[goodKey] = out[badKey]
+        delete out[badKey]
+
+    # Remove restricted keys
+    delete out[restrictedKey] for restrictedKey in @restrictedKeys
 
     out
 
