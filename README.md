@@ -9,8 +9,11 @@ Decorate an object for use with an API. Can set restricted keys to remove, trans
     Decorator = require("ps-decorator")
     Decorator.restrictedKeys = ["__v"] # These get removed
     Decorator.translations = {_id: "uid"} # _id keys get replaced with uid
-    Decorator.valueTransforms =
+    Decorator.keyValueTransforms =
       createdAt: (value) -> value.getTime()
+    Decorator.transforms.push (obj, key, value) ->
+      out["#{key}Id"] =  value.toString() if key._bsontype?
+      delete out[key]
 
     user = new User(_id: '2974392742', __v: 2, name: 'Fish', createdAt: new Date())
 

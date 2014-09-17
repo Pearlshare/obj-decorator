@@ -7,7 +7,9 @@ class Decorator
   # A dictionary of keys and what to rename them
   @translations = {}
   # A dictionary of keys and a function to perform on the corresponding values
-  @valueTransforms = {}
+  @keyValueTransforms = {}
+  # An array of functions to test a value and apply a transform
+  @transforms = []
 
 
   ###
@@ -15,7 +17,7 @@ class Decorator
     @param {Object} options
       @option {Array} restrictedKeys - keys to remove from the output document
       @option {Object} translations - key/value of object keys to rename from/to
-      @option {Object} valueTransforms - key/function of value types to tranform and their function
+      @option {Object} keyValueTransforms - key/function of value types to tranform and their function
   ###
   constructor: (options = {}) ->
     restrictedKeys = options.restrictedKeys || []
@@ -24,8 +26,11 @@ class Decorator
     translations = options.translations || {}
     @translations = _.merge @constructor.translations, translations
 
-    valueTransforms = options.valueTransforms || {}
-    @valueTransforms = _.merge @constructor.valueTransforms, valueTransforms
+    keyValueTransforms = options.keyValueTransforms || {}
+    @keyValueTransforms = _.merge @constructor.keyValueTransforms, keyValueTransforms
+
+    transforms = options.transforms || []
+    @transforms = @constructor.transforms.concat transforms
 
 
   ###
@@ -57,57 +62,60 @@ class Decorator
 
   ###
     Decorate an object
-    @param {Object} out
+    @param {Object} obj
   ###
-  _decorateObject: (out) ->
+  _decorateObject: (obj) ->
 
     # If the object has a toObject method then call it so we have simple objects to manipulate
-    out = out.toObject() if typeof out.toObject == 'function'
+    obj = obj.toObject() if typeof obj.toObject == 'function'
+
+    # Remove restricted keys
+    delete obj[restrictedKey] for restrictedKey in @restrictedKeys
+
+    # Apply value transformations such as 
+    for transformKey, valueTransform of @keyValueTransforms
+      if obj[transformKey]
+        try
+          obj[transformKey] = valueTransform(obj[transformKey])
+        catch
+          console.error "value transform of key:#{transformKey}, value:#{obj[transformKey]} failed"
+
+    # remame keys to the new key names from translations
+    for badKey, goodKey of @translations
+      if obj[badKey]
+        obj[goodKey] = obj[badKey]
+        delete obj[badKey]
 
     # Process through the object values
-    for key, value of out
-      # if bson objects go weird
-      return out.toString() if out._bsontype
+    for key, value of obj
+      # # if bson objects go weird
+      # return obj.toString() if obj._bsontype
 
       continue unless value
+      
+      # Apply the transform functions
+      transform(obj, key, value) for transform in @transforms
 
       # Process values
       switch Object.prototype.toString.call(value)
-        # # Don't output functions
+        # # Don't objput functions
         when '[object Function]'
-          delete out[key]
+          delete obj[key]
         # Process objects
         when '[object Object]'
           # Output empty objects as null
           if Object.keys(value) and Object.keys(value).length == 0
-            out[key] = null
+            obj[key] = null
           # continue processing sub objects
           else
-            out[key] = @_decorateIt value
+            obj[key] = @_decorateIt obj[key]
         # Decorate arrays of items
         when '[object Array]'
-          out[key] = @_decorateIt(value)
+          obj[key] = @_decorateIt(obj[key])
         else
-          out[key] = @_decorateIt(value)
+          obj[key] = @_decorateIt(obj[key])
 
-    # Apply value transformations such as 
-    for transformKey, valueTransform of @valueTransforms
-      if out[transformKey]
-        try
-          out[transformKey] = valueTransform(out[transformKey])
-        catch
-          console.error "value transform of key:#{transformKey}, value:#{out[transformKey]} failed"
-
-    # remame keys to the new key names from translations
-    for badKey, goodKey of @translations
-      if out[badKey]
-        out[goodKey] = out[badKey]
-        delete out[badKey]
-
-    # Remove restricted keys
-    delete out[restrictedKey] for restrictedKey in @restrictedKeys
-
-    out
+    obj
 
 
 module.exports = Decorator
