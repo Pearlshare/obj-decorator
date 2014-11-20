@@ -72,7 +72,7 @@ class Decorator
     # Remove restricted keys
     delete obj[restrictedKey] for restrictedKey in @restrictedKeys
 
-    # Apply value transformations such as 
+    # Apply value transformations such as
     for transformKey, valueTransform of @keyValueTransforms
       if obj[transformKey]
         try
@@ -92,7 +92,7 @@ class Decorator
       # return obj.toString() if obj._bsontype
 
       continue unless value
-      
+
       # Apply the transform functions
       transform(obj, key, value) for transform in @transforms
 
@@ -105,7 +105,7 @@ class Decorator
         when '[object Object]'
           # Output empty objects as null
           if Object.keys(value) and Object.keys(value).length == 0
-            obj[key] = null
+            delete obj[key]
           # continue processing sub objects
           else
             obj[key] = @_decorateIt obj[key]

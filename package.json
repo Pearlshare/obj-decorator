@@ -1,6 +1,6 @@
 {
   "name": "ps-decorator",
-  "version": "0.1.5",
+  "version": "0.1.6",
   "description": "Decorate objects for presentation",
   "repository": "https://bitbucket.org/pearlshare/ps-decorator",
   "main": "index.js",
