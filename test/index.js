@@ -34,23 +34,20 @@ var origData = {
 describe('decorator', function() {
   var testData;
 
-  beforeEach(function(done) {
+  beforeEach(function() {
     testData = _.clone(origData);
-    done();
   });
 
   context('Default decorator', function() {
 
-    it('should strip out keys which have functions for values', function(done) {
+    it('should strip out keys which have functions for values', function() {
       var out = decorator()(testData);
       assert.equal(out.ohNoAFunction, undefined);
-      done();
     });
 
-    it('should return undefined if no object is given', function(done) {
+    it('should return undefined if no object is given', function() {
       var out = decorator()();
       assert.equal(out, undefined);
-      done();
     });
   });
 
@@ -59,7 +56,7 @@ describe('decorator', function() {
 
     beforeEach(function(done) {
       out = decorator({
-        restrictedKeys: ['dontShow']
+        restricted: ['dontShow']
       })(testData);
 
       done();
@@ -81,7 +78,7 @@ describe('decorator', function() {
 
     before(function(done) {
       out = decorator({
-        translations: {sillyNameForDescription: 'description'}
+        keyTransforms: {sillyNameForDescription: 'description'}
       })(testData);
       done();
     });
@@ -102,7 +99,7 @@ describe('decorator', function() {
 
     before(function(done) {
       out = decorator({
-        keyValueTransforms: {
+        valueTransforms: {
           createdAt: function(v) {
             return v.getTime();
           }
@@ -127,7 +124,7 @@ describe('decorator', function() {
 
     before(function(done) {
       decorate = decorator({
-        restrictedKeys: ['type']
+        restricted: ['type']
       });
       done();
     });

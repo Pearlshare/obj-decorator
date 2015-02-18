@@ -3,17 +3,18 @@ var assign  = require('lodash.assign');
 
 
 /**
- * new - create a new decorator instance
+ * Returns a decorator function
+ *
  *	@param {Object} opts
- *	@param {Array}  opts.restrictedKeys - keys to remove from the output document
- *	@param {Object} opts.translations - key/value of object keys to rename from/to
- *	@param {Object} opts.keyValueTransforms - key/function of value types to tranform and their function
+ *	@param {Array}  opts.restricted - keys to remove from the output document
+ *	@param {Object} opts.keyTransforms - key/value of object keys to rename from/to
+ *	@param {Object} opts.valueTransforms - key/function of value types to tranform and their function
  */
 function decorator(opts) {
 	opts = assign({
-    restrictedKeys: [],
-    translations: {},
-    keyValueTransforms: {},
+    restricted: [],
+    keyTransforms: {},
+    valueTransforms: {},
     transforms: []
   }, opts);
 
@@ -22,6 +23,11 @@ function decorator(opts) {
   }
 }
 
+/**
+ * Decorate an mixed type
+ * @param {Mixed} out
+ * @param {Object} obj @see decorator
+ */
 function decorate(out, opts) {
   var type = Object.prototype.toString.call(out);
   if(type === '[object Array]') {
@@ -50,27 +56,23 @@ function _decorateObject(obj, opts) {
 	}
 
 	// Remove restricted keys
-  opts.restrictedKeys.forEach(function(key) {
+  opts.restricted.forEach(function(key) {
 		delete obj[key];
 	});
 
 
 	// Apply value transformations such as
-	for(transformKey in opts.keyValueTransforms) {
-		var valueTransform = opts.keyValueTransforms[transformKey];
+	for(transformKey in opts.valueTransforms) {
+		var valueTransform = opts.valueTransforms[transformKey];
 
 		if(obj[transformKey]) {
-			try {
-				obj[transformKey] = valueTransform(obj[transformKey]);
-			} catch (err) {
-				console.error("value transform of key://"+transformKey+", value://"+obj[transformKey]+" failed");
-			}
+      obj[transformKey] = valueTransform(obj[transformKey]);
 		}
 	}
 
-	// remame keys to the new key names from translations
-	for(badKey in opts.translations) {
-		var goodKey = opts.translations[badKey];
+	// remame keys to the new key names from keyTransforms
+	for(badKey in opts.keyTransforms) {
+		var goodKey = opts.keyTransforms[badKey];
 		if(obj[badKey]) {
 			obj[goodKey] = obj[badKey];
 			delete obj[badKey]
@@ -113,5 +115,6 @@ function _decorateObject(obj, opts) {
 
 	return obj;
 };
+
 
 module.exports = decorator;
