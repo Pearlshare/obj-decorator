@@ -2,7 +2,7 @@
   "name": "obj-decorator",
   "version": "0.1.6",
   "description": "Decorate objects for presentation",
-  "repository": "https://bitbucket.org/pearlshare/ps-decorator",
+  "repository": "https://github.com/Pearlshare/obj-decorator",
   "main": "index.js",
   "scripts": {
     "test": "mocha test/index.js"
