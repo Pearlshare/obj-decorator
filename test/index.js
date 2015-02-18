@@ -54,50 +54,43 @@ describe('decorator', function() {
   context('With restricted Keys', function() {
     var out;
 
-    beforeEach(function(done) {
+    beforeEach(function() {
       out = decorator({
         restricted: ['dontShow']
       })(testData);
-
-      done();
     });
 
-    it('should not contain the dontshow key', function(done) {
+    it('should not contain the dontshow key', function() {
       assert.equal(out.dontShow, undefined);
-      done();
     });
 
-    it('should not remove any other keys', function(done) {
+    it('should not remove any other keys', function() {
       assert.equal(out.name, origData.name);
-      done();
     });
   });
 
   context('With Translations', function() {
     var out;
 
-    before(function(done) {
+    before(function() {
       out = decorator({
         keyTransforms: {sillyNameForDescription: 'description'}
       })(testData);
-      done();
     });
 
-    it('should not contain the dontshow key', function(done) {
+    it('should not contain the dontshow key', function() {
       assert.equal(out.description, origData.sillyNameForDescription);
-      done();
     })
 
-    it('should not change other keys', function(done) {
+    it('should not change other keys', function() {
       assert.equal(out.name, origData.name);
-      done();
     });
   });
 
-  context('With value transforms', function(done) {
+  context('With value transforms', function() {
     var out;
 
-    before(function(done) {
+    before(function() {
       out = decorator({
         valueTransforms: {
           createdAt: function(v) {
@@ -105,46 +98,39 @@ describe('decorator', function() {
           }
         }
       })(testData);
-      done();
     });
 
-    it('should tranform the created at date to a time stamp', function(done) {
+    it('should tranform the created at date to a time stamp', function() {
       assert.equal(out.createdAt, origData.createdAt.getTime());
-      done();
     });
 
-    it('should not change other values', function(done) {
+    it('should not change other values', function() {
       assert.equal(out.name, origData.name);
-      done();
     });
   });
 
   context('nested arrays', function() {
     var decorate;
 
-    before(function(done) {
+    before(function() {
       decorate = decorator({
         restricted: ['type']
       });
-      done();
     });
 
-    it('should remove type from the nested objects', function(done) {
+    it('should remove type from the nested objects', function() {
       out = decorate(testData);
       assert(!out.contactDetails[0].hasOwnProperty('type'));
-      done();
     });
 
-    it('should remove functions', function(done) {
+    it('should remove functions', function() {
       out = decorate(testData);
       assert.equal(out.otherArray.length, 3);
-      done();
     });
 
-    it('should remove functions', function(done) {
+    it('should remove functions', function() {
       out = decorate(testData);
       assert.equal(out.otherArray.length, 3);
-      done();
     });
 
   });
