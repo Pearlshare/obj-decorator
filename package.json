@@ -5,19 +5,18 @@
   "repository": "https://bitbucket.org/pearlshare/ps-decorator",
   "main": "index.js",
   "scripts": {
-    "test": "mocha --compilers coffee:coffee-script/register --colors --recursive"
+    "test": "mocha test/index.js"
   },
   "keywords": [
-    "mongoose",
     "decorator"
   ],
-  "author": "Oliver Brooks",
   "license": "MIT",
   "dependencies": {
-    "coffee-script": "1.7.x",
-    "lodash": "^2.4.1"
+    "lodash.assign": "^3.0.0",
+    "lodash.compact": "^3.0.0"
   },
   "devDependencies": {
+    "lodash": "^2.4.1",
     "chai": "^1.9.1",
     "mocha": "^1.21.4"
   }
