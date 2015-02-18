@@ -1,5 +1,5 @@
 {
-  "name": "ps-decorator",
+  "name": "obj-decorator",
   "version": "0.1.6",
   "description": "Decorate objects for presentation",
   "repository": "https://bitbucket.org/pearlshare/ps-decorator",

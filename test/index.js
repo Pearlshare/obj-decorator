@@ -31,14 +31,14 @@ var origData = {
   ]
 };
 
-describe('decorator', function() {
+describe('obj-decorator', function() {
   var testData;
 
   beforeEach(function() {
     testData = _.clone(origData);
   });
 
-  context('Default decorator', function() {
+  context('default', function() {
 
     it('should strip out keys which have functions for values', function() {
       var out = decorator()(testData);
@@ -51,7 +51,7 @@ describe('decorator', function() {
     });
   });
 
-  context('With restricted Keys', function() {
+  context('restricted', function() {
     var out;
 
     beforeEach(function() {
@@ -69,7 +69,7 @@ describe('decorator', function() {
     });
   });
 
-  context('With Translations', function() {
+  context('key transforms', function() {
     var out;
 
     before(function() {
@@ -87,7 +87,7 @@ describe('decorator', function() {
     });
   });
 
-  context('With value transforms', function() {
+  context('value transforms', function() {
     var out;
 
     before(function() {
