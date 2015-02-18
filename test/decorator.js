@@ -1,6 +1,6 @@
 var _         = require('lodash');
 var chai      = require('chai');
-var Decorator = require('../index');
+var decorator = require('../index');
 var expect    = chai.expect;
 
 var origData = {
@@ -31,35 +31,7 @@ var origData = {
   ]
 };
 
-describe('Decorator', function() {
-
-  describe('global values', function() {
-    it('should set the restrictedKeys', function(done) {
-      Decorator.restrictedKeys = ['bob']
-      decorator = new Decorator
-      expect(decorator.restrictedKeys).to.include('bob')
-      done()
-    });
-
-    it('should set the translations', function(done) {
-      Decorator.translations = {'fish': 'face'}
-      decorator = new Decorator
-      expect(Object.keys(decorator.translations)).to.include('fish')
-      done()
-    });
-
-    it('should set the keyValueTransforms', function(done) {
-      Decorator.keyValueTransforms = {
-        transformKey: function() {
-          return 'new output';
-        }
-      };
-
-      decorator = new Decorator;
-      expect(Object.keys(decorator.keyValueTransforms)).to.include('transformKey');
-      done();
-    });
-  });
+describe('decorator', function() {
 
   describe('decorate', function() {
     var testData;
@@ -70,16 +42,15 @@ describe('Decorator', function() {
     });
 
     context('Default decorator', function() {
-      var decorator = new Decorator;
 
       it('should strip out keys which have functions for values', function(done) {
-        var out = decorator.decorate(testData);
+        var out = decorator()(testData);
         expect(out.ohNoAFunction).to.equal(undefined);
         done();
       });
 
       it('should return undefined if no object is given', function(done) {
-        var out = decorator.decorate();
+        var out = decorator()();
         expect(out).to.equal(undefined);
         done();
       });
@@ -89,10 +60,10 @@ describe('Decorator', function() {
       var out;
 
       beforeEach(function(done) {
-        decorator = new Decorator({
+        out = decorator({
           restrictedKeys: ['dontShow']
-        });
-        out = decorator.decorate(testData);
+        })(testData);
+
         done();
       });
 
@@ -111,10 +82,9 @@ describe('Decorator', function() {
       var out;
 
       before(function(done) {
-        decorator = new Decorator({
+        out = decorator({
           translations: {sillyNameForDescription: 'description'}
-        });
-        out = decorator.decorate(testData);
+        })(testData);
         done();
       });
 
@@ -133,15 +103,13 @@ describe('Decorator', function() {
       var out;
 
       before(function(done) {
-        decorator = new Decorator({
+        out = decorator({
           keyValueTransforms: {
             createdAt: function(v) {
               return v.getTime();
             }
           }
-        });
-
-        out = decorator.decorate(testData);
+        })(testData);
         done();
       });
 
@@ -157,29 +125,29 @@ describe('Decorator', function() {
     });
 
     context('nested arrays', function() {
-      var decorator;
+      var decorate;
 
       before(function(done) {
-        decorator = new Decorator({
+        decorate = decorator({
           restrictedKeys: ['type']
         });
         done();
       });
 
       it('should remove type from the nested objects', function(done) {
-        out = decorator.decorate(testData);
+        out = decorate(testData);
         expect(out.contactDetails[0]).to.not.have.key('type');
         done();
       });
 
       it('should remove functions', function(done) {
-        out = decorator.decorate(testData);
+        out = decorate(testData);
         expect(out.otherArray).to.have.length(3);
         done();
       });
 
       it('should remove functions', function(done) {
-        out = decorator.decorate(testData);
+        out = decorate(testData);
         expect(out.otherArray).to.have.length(3);
         done();
       });
