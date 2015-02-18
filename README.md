@@ -3,7 +3,7 @@ Decorate an object for use with an API. Can set restricted keys to remove, trans
 
 
 ## Usage
-See <example/demo.js> for usage
+See [example/demo.js](example/demo.js) for usage
 
 
 ## Licence
