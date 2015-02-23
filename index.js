@@ -19,7 +19,7 @@ function decorator(opts) {
   }, opts);
 
   return function(obj) {
-    return decorate(obj, opts);
+    return decorate(obj, opts, []);
   }
 }
 
@@ -28,15 +28,20 @@ function decorator(opts) {
  * @param {Mixed} out
  * @param {Object} obj @see decorator
  */
-function decorate(out, opts) {
+function decorate(out, opts, circularRefCache) {
   var type = Object.prototype.toString.call(out);
-  if(type === '[object Array]') {
+
+  if (typeof out === 'object' && out !== null && circularRefCache.indexOf(out) !== -1) {
+    return out;
+  } else if(type === '[object Array]') {
+    circularRefCache.push(out);
     var out = out.map(function(item) {
-      return decorate(item, opts)
+      return decorate(item, opts, circularRefCache)
     });
     return compact(out);
   } else if (type === '[object Object]') {
-    return _decorateObject(out, opts);
+    circularRefCache.push(out);
+    return _decorateObject(out, opts, circularRefCache);
   } else if (type === '[object Function]') {
     return undefined;
   } else {
@@ -49,7 +54,7 @@ function decorate(out, opts) {
  * Decorate an object
  * @param {Object} obj
  */
-function _decorateObject(obj, opts) {
+function _decorateObject(obj, opts, circularRefCache) {
 	// If the object has a toObject method then call it so we have simple objects to manipulate
 	if(typeof(obj.toObject) === 'function') {
 		obj = obj.toObject();
@@ -60,9 +65,9 @@ function _decorateObject(obj, opts) {
 		delete obj[key];
 	});
 
-
 	// Apply value transformations such as
 	for(transformKey in opts.valueTransforms) {
+
 		var valueTransform = opts.valueTransforms[transformKey];
 
 		if(obj[transformKey]) {
@@ -104,12 +109,12 @@ function _decorateObject(obj, opts) {
 				delete obj[key];
 			// continue processing sub objects
 			} else {
-				obj[key] = decorate(obj[key], opts);
+				obj[key] = decorate(obj[key], opts, circularRefCache);
 			}
 		} else if(type === '[object Array]') {
-			obj[key] = decorate(obj[key], opts);
+			obj[key] = decorate(obj[key], opts, circularRefCache);
 		} else {
-			obj[key] = decorate(obj[key], opts);
+			obj[key] = decorate(obj[key], opts, circularRefCache);
 		}
 	}
 

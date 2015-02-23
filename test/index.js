@@ -132,6 +132,31 @@ describe('obj-decorator', function() {
       out = decorate(testData);
       assert.equal(out.otherArray.length, 3);
     });
+  });
+
+  context('circular refs', function() {
+    var decorate;
+
+    before(function() {
+      decorate = decorator({
+        valueTransforms: {
+          "two": function(v) {
+            return v+3;
+          }
+        }
+      });
+    });
+
+    it('should deal with circular refs', function() {
+      var obj = [
+        {two: 2}
+      ]
+      obj.push(obj);
+
+      out = decorate(obj);
+      assert.equal(obj[0].two, 5);
+      assert.equal(obj[1][0].two, 5);
+    });
 
   });
 });
